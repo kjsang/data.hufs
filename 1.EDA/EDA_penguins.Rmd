@@ -1,0 +1,133 @@
+---
+title: "1.EDA_penguins"
+author: "Jusang Kim"
+date: '2022-07-12'
+output:
+  html_document:
+    df_print: paged
+    latex_engine: xelatex
+monofont: UnShinmun
+mainfont: UnDotum
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### 1. packages load
+활용하고자 하는 패키지를 로드한다.
+
+```{r echo=TRUE}
+pacman::p_load(
+  tidyverse, # 타이디
+  rstatix, # 통계툴
+  palmerpenguins, # 데이터셋
+  RColorBrewer, 
+  naniar # useful for visualising missing values
+  )
+```
+
+### 2. data load
+펭귄 데이터를 로드한다. 펭귄데이터는 캐글의 핫한 데이터이다. [이곳](https://allisonhorst.github.io/palmerpenguins/)을 참조하시오. 데이터가 잘 적재되었는지 `head()` 함수와 `tail()` 함수를 사용해서 확인한다.
+
+```{r echo=TRUE}
+data <- palmerpenguins::penguins
+data %>% head()
+data %>% tail()
+data %>% summary()
+```
+잘 적재가 된 것으로 보인다. 다만 `NA` 값이 보인다. 각 변수별로 NA 값이 얼마나 포함되어 있는지 알 수 있다. NA값을 삭제하고 진행할 것인지, 아니면 대체하고 진행할 것인지는 분석가의 판단이다. 나는? 일단 살펴보고...
+
+### 3. EDA
+```{r echo=TRUE}
+data %>% glimpse()
+```
+   
+변수는 총 8개이며, 이 중 `bill_length_mm`, `bill_depth_mm`, `flipper_length_mm`, `body_mass_g`는 연속형 변수, 나머지는 범주형변수로 보인다. `year`는 관측년을 뜻한다.
+   
+```{r echo = TRUE}
+data %>% vis_miss() # NA 시각화해보니 별로 없다. 그냥 지우자.
+data %>% na.omit() -> data_prep
+data_prep %>% vis_miss() # 깔끔하다.
+```
+   
+야무지게 NA값을 없애줬다.
+   
+```{r echo=TRUE}
+data_prep %>% rstatix::get_summary_stats()
+```
+   
+연속형변수의 통계값을 확인하였다. 
+   
+```{r echo=TRUE}
+data_prep %>% count(species)
+```
+```{r echo=TRUE}
+data_prep %>% 
+  group_by(species) %>% 
+  summarise(
+    across(c(
+      bill_depth_mm, bill_length_mm, flipper_length_mm, body_mass_g
+    ), mean, na.rm = T)
+  )
+```
+
+   
+   
+각 종별로 부리의 길이, 넓이, 날개의 너비 및 길이, 몸무게 등이 다름을 확인할 수 있다. 분류분석을 하고싶어지겠으나 참자.
+   
+```{r echo=TRUE}
+# 3.1. 변수별 분포(점도표) -------------------------------------------------------------
+
+# 시각화를 해보자. 하지만 그 전에 g를 kg로 바꿔주자
+data_prep %>% 
+  mutate(body_mass_kg = body_mass_g / 1000) -> data_prep2
+
+data_prep2 %>% 
+  ggplot(aes(x = flipper_length_mm, y = body_mass_kg)) +
+  geom_point(aes(color = species,
+                 shape = species),
+             size = 3,
+             alpha = 1) +
+  scale_color_manual(values = c("darkorange","purple","cyan4")) +
+  xlab("날개길이") +
+  ylab("몸무게(kg)")
+# 시각화를 해보니 딱히 아델리랑 친스트랩이 구분이 안 된다. 다른 변수로도 살펴보자.
+
+data_prep2 %>% 
+  ggplot(aes(x = flipper_length_mm, y = bill_length_mm)) +
+  geom_point(aes(color = species,
+                 shape = species),
+             size = 3,
+             alpha = 1) +
+  scale_color_manual(values = c("darkorange","purple","cyan4")) +
+  xlab("날개길이") +
+  ylab("부리길이")
+# 부리길이와 날개길이를 보니 어느정도 구분이 된다.
+```
+
+```{r echo=TRUE}
+# 3.2. 히스토그램 --------------------------------------------------------------
+data_prep2 %>% 
+  ggplot(aes(flipper_length_mm)) +
+  geom_histogram(aes(fill = species),
+                     alpha = 0.5,
+                     position = "identity") + # 스택으로 하면 쌓이는데, 개별값으로 하면 안 쌓인다.
+  scale_fill_manual(values = c("darkorange","purple","cyan4")) +
+  xlab("날개길이") +
+  ylab("빈도")
+```
+
+```{r echo=TRUE}
+# 3.3. 박스플롯 ---------------------------------------------------------------
+data_prep2 %>% 
+  ggplot(aes(x = species, y = flipper_length_mm)) +
+  geom_boxplot(aes(color = species),
+               width = 0.3) +
+  geom_jitter(aes(color = species),
+              alpha = 0.5,
+              position = position_jitter(width = 0.2, seed = 0)) +
+  scale_color_manual(values = c("darkorange","purple","cyan4")) +
+  xlab("종") +
+  ylab("날개길이")
+```
