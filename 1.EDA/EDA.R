@@ -6,7 +6,7 @@ pacman::p_load(
   rstatix, # 통계툴
   palmerpenguins, # 데이터셋
   RColorBrewer, 
-  naniar, # useful for visualising missing values
+  naniar, # useful for visualizing missing values
   PerformanceAnalytics, # 왜도 및 첨도
   psych # 기하평균, 조화평균 구하기
   )
