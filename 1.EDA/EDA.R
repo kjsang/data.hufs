@@ -119,7 +119,7 @@ data_prep2 %>%
   scale_fill_manual(values = c("darkorange","purple","cyan4")) +
   xlab("날개길이") +
   ylab("빈도")
-
+theme(base_family = "Nanumgothic")
 
 # 3.3. 박스플롯 ---------------------------------------------------------------
 data_prep2 %>% 
@@ -150,7 +150,7 @@ data_cor %>% glimpse()
 # [, 9]	am	Transmission (0 = automatic, 1 = manual)
 # [,10]	gear	Number of forward gears
 
-
+theme_set(theme_grey(base_family='AppleGothic'))
 # 4.1. 피어슨 상관분석 -----------------------------------------------------------
 data_cor %>% 
   rstatix::cor_test(vars = mpg, vars2 = disp,
@@ -203,7 +203,7 @@ data_cor %>%
 
 
 # 5. 평균 -------------------------------------------------------------------
-read_csv("0.data\\1.Korea_GDP.csv") -> GDP
+read_csv("0.data//1.Korea_GDP.csv") -> GDP
 GDP %>% 
   pivot_longer(cols = `1970`:`2021`,
                names_to = "Year",
